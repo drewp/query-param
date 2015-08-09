@@ -1,0 +1,100 @@
+<link rel="import" href="/lib/polymer/1.0.9/polymer/polymer.html">
+
+<dom-module id="query-param">
+  <template>
+  </template>
+  <script src="/lib/URI-1.16.0-lite.js"></script>
+  <script type="text/javascript">
+   Polymer({
+     is: 'query-param',
+     properties: {
+       key: {
+         // URL query string key name
+         type: String,
+         observer: 'onConfigChange'
+       },
+       prop: {
+         // Name of property in the parent element (nearest parent
+         // with a matching property). Must be set at 'attached' time.
+         type: String,
+         observer: 'onConfigChange'
+       },
+       // We set these:
+       default: {type: Object},
+       propType: {type: Object}, // Number, Boolean, String, Date, Object
+     },
+
+     onConfigChange: function() {
+       if (this._attached) {
+         this.sneakPropertyData(this.parentElement, this.prop);
+       }
+     },
+     
+     sneakPropertyData: function(firstParent, propName) {
+       var parent = firstParent;
+       while (!parent.properties || !parent.properties[propName]) {
+         parent = parent.parentElement;
+         if (parent == null) {
+           throw new Error("no parent found");
+         }
+       }
+       this.default = parent.properties[propName].value;
+       this.propType = parent.properties[propName].type;
+       parent.addEventListener(
+         Polymer.CaseMap.camelToDashCase(propName) + '-changed',
+         this.onRemoteValue.bind(this));
+       this.owner = parent;
+     },
+     
+     attached: function() {
+       this.sneakPropertyData(this.parentElement, this.prop);
+       this.owner.set(this.prop, this.valueFromUrl());
+       this._attached = true;
+     },
+                  
+     onRemoteValue: function (ev) {
+       this.setUrlValue(this.owner[this.prop]);
+     },
+    
+     valueFromUrl: function() {
+       var uri = new URI();
+       var q = uri.query(true);
+       if (q[this.key] !== undefined) {
+         return this.queryValueParse(q[this.key]);
+       } else {
+         return this.default;
+       }
+     },
+     
+     setUrlValue: function(value) {
+       var uri = new URI();
+       if (value == this.default) {
+         uri.removeQuery(this.key)
+       } else {
+         uri.setQuery(this.key, this.queryValueSerialize(value));
+       }
+       window.history.pushState(null, '', uri);
+     },
+     
+     queryValueSerialize: function(value) {
+       // Like polymer's serialize, but prefers '0'/'1' for Boolean.
+       
+       if (this.propType === Boolean) {
+         return value ? '1' : '0';
+       }
+       return this.serialize(value);
+     },
+     
+     queryValueParse: function(str) {
+       // Like polymer's deserialize but allows various positive
+       // words for booleans.
+       
+       if (this.propType === Boolean) {
+         return str == '1' || str == 'true' || str == 'yes' || str == 'on';
+       }
+       return this.deserialize(str, this.propType);
+     }
+   });
+  </script>
+</dom-module>
+

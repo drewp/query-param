@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <title>qp-demo</title>
+    <script src="/lib/polymer/1.0.9/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="/lib/polymer/1.0.9/polymer/polymer.html">
+    <link rel="import" href="query-param.html">
+  </head>
+  <body>
+
+    <dom-module id="qp-demo">
+      <template>
+        <h1>Query parameter demo</h1>
+        <p>Play with the form and watch the url bar</p>
+        <div>
+          <label><input type="checkbox" checked="{{enableSort::change}}"> enable sort</label>
+          <query-param key="es" prop="enableSort"></query-param>
+        </div>
+        
+        <div>
+          <label><input type="checkbox" checked="{{enableColor::change}}"> enable color (default true)</label>
+          <query-param key="ec" prop="enableColor"></query-param>
+        </div>
+
+        <div>
+          <input type="text" value="{{username::change}}"> username
+          <query-param key="user" prop="username"></query-param>
+        </div>
+        
+      </template>
+      <script>
+       Polymer({
+         is: "qp-demo",
+         properties: {
+           enableSort: {type: Boolean, value: false, notify: true},
+           enableColor: {type: Boolean, value: true, notify: true},
+           username: {type: String, notify: true}
+         }
+       });
+      </script>
+    </dom-module>
+    <qp-demo></qp-demo>
+    
+    
+  </body>
+</html>
